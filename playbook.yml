@@ -1,0 +1,7 @@
+-
+  name: 'Apply tasks on nodes'
+  hosts: all
+  tasks:
+    -
+      name: 'Ping'
+      ping:
