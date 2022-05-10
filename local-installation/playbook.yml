@@ -49,11 +49,6 @@
       name: 'Get MySQL generated root password'
       shell: "docker container logs mysql 2>&1|grep 'GENERATED ROOT PASSWORD'|awk -F 'PASSWORD: ' '{print $2}'"
       register: mysql_password
-    -
-      name: 'Show MySQL generated root password'
-      debug:
-         var: mysql_password
-#        msg: "{{ mysql_password.stdout }}"
 -
   name: 'Deploy phpMyAdmin on node2'
   hosts: node2
