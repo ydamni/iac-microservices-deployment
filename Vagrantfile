@@ -14,6 +14,8 @@ Vagrant.configure("2") do |config|
     node1.ssh.insert_key = false
     node1.vm.provision "ansible" do |ansible|
       ansible.verbose = "v"
+      #Activate Parallel Execution | Includes hostvars
+      ansible.limit = "all"
       ansible.playbook = "playbook.yml"
     end
   end
@@ -32,6 +34,8 @@ Vagrant.configure("2") do |config|
     node2.ssh.insert_key = false
     node2.vm.provision "ansible" do |ansible|
       ansible.verbose = "v"
+      #Activate Parallel Execution | Includes hostvars
+      ansible.limit = "all"
       ansible.playbook = "playbook.yml"
     end
   end

@@ -9,6 +9,7 @@
       register: docker_installed
     -
       name: 'Install Docker if not installed'
+      ### Install Docker && Add user 'vagrant' to group 'docker'
       shell: 'curl -fsSL https://get.docker.com/ | sh && sudo usermod -aG docker $USER'
       when: docker_installed.stat.islnk is not defined
     -
@@ -18,5 +19,59 @@
       register: pip_installed
     -
       name: 'Install pip3 & Docker SDK if not installed'
-      shell: 'sudo apt -y update && sudo apt -y install python3-pip && sudo pip3 install docker'
+      ### Update && Install pip3 && Install Docker SDK && Give access to Docker Socket for Docker API
+      shell: 'sudo apt -y update && sudo apt -y install python3-pip && sudo pip3 install docker && sudo chown $USER /var/run/docker.sock'
       when: pip_installed.stat.islnk is not defined
+-
+  name: 'Deploy MySQL on node1'
+  hosts: node1
+  tasks:
+    -
+      name: 'Delete existing container'
+      ### Used in order to recreate a new container with 'vagrant provision'
+      docker_container:
+        state: absent
+        name: mysql
+    -
+      name: 'Deploy MySQL container'
+      docker_container:
+        detach: true
+        name: mysql
+        image: mysql:latest
+        published_ports: 3306:3306
+        env:
+          MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    -
+      name: 'Wait until the root password is generated'
+      pause:
+        seconds: 15
+    -
+      name: 'Get MySQL generated root password'
+      shell: "docker container logs mysql 2>&1|grep 'GENERATED ROOT PASSWORD'|awk -F 'PASSWORD: ' '{print $2}'"
+      register: mysql_password
+    -
+      name: 'Show MySQL generated root password'
+      debug:
+         var: mysql_password
+#        msg: "{{ mysql_password.stdout }}"
+-
+  name: 'Deploy phpMyAdmin on node2'
+  hosts: node2
+  tasks:
+    -
+      name: 'Delete existing container'
+      ### Used in order to recreate a new container with 'vagrant provision'
+      docker_container:
+        state: absent
+        name: phpmyadmin
+    -
+      name: 'Deploy phpMyAdmin container'
+      docker_container:
+        detach: true
+        name: phpmyadmin
+        image: phpmyadmin:latest
+        published_ports: 8080:80
+        env:
+          PMA_HOST: "192.168.42.1"
+          PMA_USER: "root"
+          PMA_PASSWORD: "{{ hostvars.node1.mysql_password.stdout }}"
