@@ -1,7 +1,22 @@
 -
-  name: 'Apply tasks on nodes'
+  name: 'Install Docker on all nodes'
   hosts: all
   tasks:
     -
-      name: 'Ping'
-      ping:
+      name: 'Verify if Docker is installed'
+      stat:
+        path: /usr/bin/docker
+      register: docker_installed
+    -
+      name: 'Install Docker if not installed'
+      shell: 'curl -fsSL https://get.docker.com/ | sh && sudo usermod -aG docker $USER'
+      when: docker_installed.stat.islnk is not defined
+    -
+      name: 'Verify if pip3 is installed'
+      stat:
+        path: /usr/bin/pip3
+      register: pip_installed
+    -
+      name: 'Install pip3 & Docker SDK if not installed'
+      shell: 'sudo apt -y update && sudo apt -y install python3-pip && sudo pip3 install docker'
+      when: pip_installed.stat.islnk is not defined
