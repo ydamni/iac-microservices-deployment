@@ -26,33 +26,8 @@ Vagrant.configure("2") do |config|
       node.ssh.insert_key = false
       node.vm.provision "ansible" do |ansible|
         ansible.verbose = "v"
-        #Activate Parallel Execution | Includes hostvars
-        ansible.limit = "all"
-        ansible.playbook = "playbook.yml"
-      end
-    end
-  end
-end
-
-Vagrant.configure("2") do |config|
-  #Create Worker nodes
-  (1..NUM_WORKER_NODE).each do |i|
-    config.vm.define "worker-#{i}" do |node|
-      #Node config
-      node.vm.box = "ubuntu/focal64"
-      node.vm.hostname = "worker-#{i}"
-      node.vm.network "public_network", ip: IP_NETWORK + "#{WORKER_IP_START + i}", bridge: "eno1"
-      #Provide Memory/CPU
-      node.vm.provider "virtualbox" do |v|
-        v.memory = 2048
-        v.cpus = 2
-      end
-      #Implement Ansible
-      node.ssh.insert_key = false
-      node.vm.provision "ansible" do |ansible|
-        ansible.verbose = "v"
-        #Activate Parallel Execution | Includes hostvars
-        ansible.limit = "all"
+#        #Activate Parallel Execution | Includes hostvars
+#        ansible.limit = "all"
         ansible.playbook = "playbook.yml"
       end
     end
@@ -76,8 +51,33 @@ Vagrant.configure("2") do |config|
       node.ssh.insert_key = false
       node.vm.provision "ansible" do |ansible|
         ansible.verbose = "v"
-        #Activate Parallel Execution | Includes hostvars
-        ansible.limit = "all"
+#        #Activate Parallel Execution | Includes hostvars
+#        ansible.limit = "all"
+        ansible.playbook = "playbook.yml"
+      end
+    end
+  end
+end
+
+Vagrant.configure("2") do |config|
+  #Create Worker nodes
+  (1..NUM_WORKER_NODE).each do |i|
+    config.vm.define "worker-#{i}" do |node|
+      #Node config
+      node.vm.box = "ubuntu/focal64"
+      node.vm.hostname = "worker-#{i}"
+      node.vm.network "public_network", ip: IP_NETWORK + "#{WORKER_IP_START + i}", bridge: "eno1"
+      #Provide Memory/CPU
+      node.vm.provider "virtualbox" do |v|
+        v.memory = 2048
+        v.cpus = 2
+      end
+      #Implement Ansible
+      node.ssh.insert_key = false
+      node.vm.provision "ansible" do |ansible|
+        ansible.verbose = "v"
+#        #Activate Parallel Execution | Includes hostvars
+#        ansible.limit = "all"
         ansible.playbook = "playbook.yml"
       end
     end
