@@ -9,6 +9,7 @@ Install [awscli](https://docs.aws.amazon.com/cli/latest/userguide/getting-starte
 
 
 Create main.tfvars files,
+
 for *eks-cluster-provisioning*:
 ```
 cat <<EOF | sudo tee ./eks-cluster-provisioning/main.tfvars
@@ -28,6 +29,7 @@ Replace *<root_password>* with a secure password.
 ## Commands
 
 Configure AWS access to connect to AWS API:
+
 `aws configure`
 
 Provision EKS Cluster:
@@ -40,6 +42,7 @@ terraform -chdir="./eks-cluster-provisioning" apply -var-file="main.tfvars"
 ```
 
 Add kubeconfig in local machine to access EKS cluster:
+
 `aws eks update-kubeconfig --name iac-eks-cluster`
 
 Provision Kubernetes objects (MySQL & phpMyAdmin deployments and services):
@@ -54,11 +57,13 @@ terraform -chdir="./kubernetes-objects-provisioning" apply -var-file="main.tfvar
 ## Verification
 
 Access to phpMyAdmin from Classic Load Balancer DNS name:
+
 `curl $(aws elb describe-load-balancers --output text --query 'LoadBalancerDescriptions[*].DNSName[]')`
 
 OR
 
 Copy the output from this command:
+
 `aws elb describe-load-balancers --output text --query 'LoadBalancerDescriptions[*].DNSName[]'`
 
 And paste it to your web browser.
