@@ -67,3 +67,12 @@ Copy the output from this command:
 `aws elb describe-load-balancers --output text --query 'LoadBalancerDescriptions[*].DNSName[]'`
 
 And paste it to your web browser.
+
+## Once finished
+
+Destroy provisioned resources:
+```
+terraform -chdir="./kubernetes-objects-provisioning" destroy -var-file="main.tfvars"
+
+terraform -chdir="./eks-cluster-provisioning" destroy -var-file="main.tfvars"
+```
