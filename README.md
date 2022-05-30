@@ -8,10 +8,10 @@ This project is for learning purposes, in order to compare the level of complexi
 - deploying a microservice infrastructure *without Kubernetes* versus *with Kubernetes*.
 
 There are therefore four microservice infrastructures which will be deployed and compared:
-- [Local infrastructure without Kubernetes](/tree/main/local-installation/without-kubernetes/);
-- [Local infrastructure with Kubernetes](/tree/main/local-installation/with-kubernetes/);
-- [Cloud infrastructure without Kubernetes](/tree/main/cloud-installation/without-kubernetes/);
-- [Cloud infrastructure with Kubernetes](/tree/main/cloud-installation/with-kubernetes/).
+- [Local infrastructure without Kubernetes](/local-installation/without-kubernetes/);
+- [Local infrastructure with Kubernetes](/local-installation/with-kubernetes/);
+- [Cloud infrastructure without Kubernetes](/cloud-installation/without-kubernetes/);
+- [Cloud infrastructure with Kubernetes](/cloud-installation/with-kubernetes/).
 
 
 ## Tools used
