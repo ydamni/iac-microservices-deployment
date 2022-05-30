@@ -1,6 +1,6 @@
 ## Infrastructure plan
 
-(infrastructure_plan.png)
+![infrastructure](local-install-without-kube.PNG)
 
 
 ## Prerequisites
