@@ -1,0 +1,174 @@
+-
+  name: 'Install Kubernetes dependencies for Ansible'
+  hosts: master-1
+  tasks:
+    -
+      name: 'Verify if pip3 is installed'
+      stat:
+        path: /usr/bin/pip3
+      register: pip_installed
+    -
+      name: 'Install pip3 & dependencies'
+      shell: 'sudo apt -y update && sudo apt -y install python3-pip && sudo pip3 install openshift pyyaml kubernetes'
+      when: pip_installed.stat.islnk is not defined
+-
+  name: 'Deploy MySQL'
+  hosts: master-1
+  tasks:
+    -
+      name: 'Delete existing Deployment'
+      ### Used in order to recreate a new Deployment with 'vagrant provision'
+      kubernetes.core.k8s:
+        state: absent
+        delete_options:
+          gracePeriodSeconds: 0
+        api_version: apps/v1
+        kind: Deployment
+        namespace: default
+        name: mysql
+    -
+      name: 'Delete existing Service'
+      ### Used in order to recreate a new Service with 'vagrant provision'
+      kubernetes.core.k8s:
+        state: absent
+        delete_options:
+          gracePeriodSeconds: 0
+        api_version: v1
+        kind: Service
+        namespace: default
+        name: mysql
+    -
+      name: 'Create MySQL Deployment'
+      kubernetes.core.k8s:
+        state: present
+        namespace: default
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: mysql
+            labels:
+              app: mysql
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: mysql
+            template:
+              metadata:
+                labels:
+                  app: mysql
+              spec:
+                containers:
+                - name: mysql
+                  image: mysql:latest
+                  ports:
+                    - containerPort: 3306
+                  env:
+                    - name: MYSQL_RANDOM_ROOT_PASSWORD
+                      value: "yes"
+    -
+      name: 'Create MySQL Service'
+      ### In order to make MySQL accessible on port 3306 for the phpMyAdmin pod
+      kubernetes.core.k8s:
+        state: present
+        namespace: default
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: mysql
+            labels:
+              app: mysql
+          spec:
+            selector:
+              app: mysql
+            type: ClusterIP
+            ports:
+              - port: 3306
+    -
+      name: 'Wait until MySQL image is installed and the root password is generated'
+      pause:
+        seconds: 60
+    -
+      name: 'Get MySQL generated root password'
+      shell: "kubectl logs $(kubectl get pods -l app=mysql -o jsonpath='{.items[0].metadata.name}')|grep 'GENERATED ROOT PASSWORD'|awk -F 'PASSWORD: ' '{print $2}'"
+      register: mysql_password
+-
+  name: 'Deploy phpMyAdmin'
+  hosts: master-1
+  tasks:
+    -
+      name: 'Delete existing Deployment'
+      ### Used in order to recreate a new Deployment with 'vagrant provision'
+      kubernetes.core.k8s:
+        state: absent
+        delete_options:
+          gracePeriodSeconds: 0
+        api_version: apps/v1
+        kind: Deployment
+        namespace: default
+        name: phpmyadmin
+    -
+      name: 'Delete existing Service'
+      ### Used in order to recreate a new Service with 'vagrant provision'
+      kubernetes.core.k8s:
+        state: absent
+        delete_options:
+          gracePeriodSeconds: 0
+        api_version: v1
+        kind: Service
+        namespace: default
+        name: phpmyadmin
+    -
+      name: 'Create phpMyAdmin Deployment'
+      kubernetes.core.k8s:
+        state: present
+        namespace: default
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: phpmyadmin
+            labels:
+              app: phpmyadmin
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: phpmyadmin
+            template:
+              metadata:
+                labels:
+                  app: phpmyadmin
+              spec:
+                containers:
+                - name: phpmyadmin
+                  image: phpmyadmin:latest
+                  env:
+                    - name: "PMA_HOST"
+                      value: mysql
+                    - name: PMA_USER
+                      value: "root"
+                    - name: PMA_PASSWORD
+                      value: "{{ hostvars['master-1'].mysql_password.stdout }}"
+    -
+      name: 'Create phpMyAdmin Service'
+      ### In order to make phpMyAdmin accessible on port 30080 for the host
+      kubernetes.core.k8s:
+        state: present
+        namespace: default
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: phpmyadmin
+            labels:
+              app: phpmyadmin
+          spec:
+            selector:
+              app: phpmyadmin
+            type: NodePort
+            ports:
+              - port: 80
+                nodePort: 30080

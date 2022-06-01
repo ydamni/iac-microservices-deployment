@@ -1,0 +1,88 @@
+-
+  name: 'Install Docker on Worker nodes'
+  hosts: worker-*
+  tasks:
+    -
+      name: 'Verify if Docker is installed'
+      stat:
+        path: /usr/bin/docker
+      register: docker_installed
+    -
+      name: 'Install Docker if not installed'
+      ### Install Docker && Add user 'vagrant' to group 'docker'
+      shell: 'curl -fsSL https://get.docker.com/ | sh && sudo usermod -aG docker $USER'
+      when: docker_installed.stat.islnk is not defined
+    -
+      name: 'Verify if pip3 is installed'
+      stat:
+        path: /usr/bin/pip3
+      register: pip_installed
+    -
+      name: 'Install pip3 & Docker SDK if not installed'
+      ### Update && Install pip3 && Install Docker SDK && Give access to Docker Socket for Docker API
+      shell: 'sudo apt -y update && sudo apt -y install python3-pip && sudo pip3 install docker && sudo chown $USER /var/run/docker.sock'
+      when: pip_installed.stat.islnk is not defined
+    -
+      name: 'Modify Docker daemon to use cgroupdriver systemd'
+      shell: |
+        cat <<EOF | sudo tee /etc/docker/daemon.json  
+        {  
+        "exec-opts": ["native.cgroupdriver=systemd"],  
+        "log-driver": "json-file",  
+        "log-opts": {  
+        "max-size": "100m"  
+        },  
+        "storage-driver": "overlay2"  
+        }  
+        EOF
+        sudo systemctl daemon-reload
+        sudo systemctl restart docker
+-
+  name: 'Allow bridge traffic on Worker nodes'
+  hosts: worker-*
+  tasks:
+    -
+      name: 'Allow bridge traffic'
+      shell: |
+        sudo sysctl net.bridge.bridge-nf-call-iptables=1
+-
+  name: 'Create a shared folder accessible for all nodes'
+  hosts: master-1
+  tasks:
+    -
+      name: 'Create shared folder'
+      shell: 'mkdir -p /vagrant/.vagrant/shared-folder'
+-
+  name: 'Delete old inventory file'
+  hosts: master-1
+  tasks:
+    -
+      name: 'Delete old inventory file'
+      shell : 'rm -f /vagrant/.vagrant/shared-folder/inventory.txt'
+-
+  name: 'Store hostname & IP of all nodes'
+  hosts: all
+  tasks:
+    -
+      name: 'Store hostname & IP inside an inventory file'
+      shell: |
+        INTERNAL_IP=$(ip addr show enp0s8 | grep "inet " | awk '{print $2}' | cut -d / -f 1)
+        HOSTNAME=$(hostname -s)
+        echo $HOSTNAME $INTERNAL_IP >> /vagrant/.vagrant/shared-folder/inventory.txt
+    -
+      name: 'Append nodes IP addresses to /etc/hosts file'
+      shell: |
+        LIST_IP=$(cat /vagrant/.vagrant/shared-folder/inventory.txt | awk '{print $2 " " $1}')
+        cat <<EOF | sudo tee -a /etc/hosts
+        ${LIST_IP}
+        EOF
+-
+  name: 'Install kubectl on Master nodes'
+  hosts: master-*
+  tasks:
+    -
+      name: 'Install kubectl v1.13.0'
+      shell: |
+        wget https://storage.googleapis.com/kubernetes-release/release/v1.13.0/bin/linux/amd64/kubectl
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/
