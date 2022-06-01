@@ -1,3 +1,5 @@
+## Before starting
+
 > Kubernetes is fully deployed in IaC following "Kubernetes The Hard Way" method. More details: https://github.com/ydamni/kubernetes-the-iac-way
 
 ## Infrastructure plan
