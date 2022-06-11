@@ -17,6 +17,7 @@ MySQL and phpMyAdmin microservices will be deployed into the infrastructure to v
 - The infrastructure deployment is functional;
 - The microservices manage to interact together.
 
+All these infrastructures will be deployed using **Infrastructure as Code**.
 
 ## Tools used
 
